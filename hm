@@ -1,0 +1,54 @@
+#!/bin/bash 
+
+# hm (handyman) is a productivity bash tool for quick shortcuts to common bash, git and other CLI tools to increase productivity
+
+usage () 
+{  
+    echo "Options available:" 
+    echo "  hm branch <JIRA Key> : fork a new feature branch in git with the name AVSW-<JIRA Key>"
+    echo "  hm push : push current git commit branch to remote" 	
+}
+
+create_feature_branch () 
+{ 
+    local BRANCH_NAME = "AVSW-$1"
+    echo "[hm] creating a new branch $BRANCH_NAME"
+    git checkout -b $BRANCH_NAME
+}
+
+push_branch_to_remote()
+{ 
+    local GIT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+    echo "[hm] current git branch: $GIT_BRANCH" 
+    echo "[hm] pushing commit to remote"
+    git push origin $GIT_BRANCH
+}
+
+JIRA_KEY=""
+BRANCH=0
+PUSH_TO_REMOTE=0
+
+for i in $@
+do
+case $i in 
+   branch) 
+   JIRA_KEY=$2 
+   BRANCH=1
+   shift
+   shift
+   ;;
+   push)
+   PUSH_TO_REMOTE=1
+   shift 
+   shift
+   ;;
+esac 
+done
+
+if [[ $BRANCH = 1 ]]; then 
+    create_feature_branch $JIRA_KEY
+elif [[ $PUSH_TO_REMOTE = 1 ]]; then 
+    push_branch_to_remote
+else 
+    usage
+fi
