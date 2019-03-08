@@ -11,17 +11,17 @@ usage ()
 
 create_feature_branch () 
 { 
-    local BRANCH_NAME = "AVSW-$1"
-    echo "[hm] creating a new branch $BRANCH_NAME"
-    git checkout -b $BRANCH_NAME
+    local FBRANCH="AVSW-$1"
+    echo "[hm] creating a new branch $FBRANCH"
+    git checkout -b $FBRANCH
 }
 
-push_branch_to_remote()
+push_branch_to_remote ()
 { 
-    local GIT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
-    echo "[hm] current git branch: $GIT_BRANCH" 
+    local CBRANCH=$(git rev-parse --abbrev-ref HEAD)
+    echo "[hm] current git branch: $CBRANCH" 
     echo "[hm] pushing commit to remote"
-    git push origin $GIT_BRANCH
+    git push origin $CBRANCH
 }
 
 JIRA_KEY=""
