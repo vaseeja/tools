@@ -1,54 +1,71 @@
-#!/bin/bash 
+#!/bin/bash
 
 # hm (handyman) is a productivity bash tool for quick shortcuts to common bash, git and other CLI tools to increase productivity
 
-usage () 
-{  
-    echo "Options available:" 
+usage ()
+{
+    echo "Options available:"
     echo "  hm branch <JIRA Key> : fork a new feature branch in git with the name AVSW-<JIRA Key>"
-    echo "  hm push : push current git commit branch to remote" 	
+    echo "  hm delete <JIRA Key> : delete a feature branch in git with the name AVSW-<JIRA Key>"
+    echo "  hm push : push current git commit branch to remote"
 }
 
-create_feature_branch () 
-{ 
+create_feature_branch ()
+{
     local FBRANCH="AVSW-$1"
     echo "[hm] creating a new branch $FBRANCH"
     git checkout -b $FBRANCH
 }
 
+delete_feature_branch ()
+{
+    local FBRANCH="AVSW-$1"
+    echo "[hm] deleting feature branch $FBRANCH"
+    git branch -d $FBRANCH
+}
+
 push_branch_to_remote ()
-{ 
+{
     local CBRANCH=$(git rev-parse --abbrev-ref HEAD)
-    echo "[hm] current git branch: $CBRANCH" 
+    echo "[hm] current git branch: $CBRANCH"
     echo "[hm] pushing commit to remote"
     git push origin $CBRANCH
 }
 
 JIRA_KEY=""
-BRANCH=0
+CREATE_BRANCH=0
+DELETE_BRANCH=0
 PUSH_TO_REMOTE=0
 
 for i in $@
 do
-case $i in 
-   branch) 
-   JIRA_KEY=$2 
-   BRANCH=1
+case $i in
+   branch)
+   JIRA_KEY=$2
+   CREATE_BRANCH=1
+   shift
+   shift
+   ;;
+   delete)
+   JIRA_KEY=$2
+   DELETE_BRANCH=1
    shift
    shift
    ;;
    push)
    PUSH_TO_REMOTE=1
-   shift 
+   shift
    shift
    ;;
-esac 
+esac
 done
 
-if [[ $BRANCH = 1 ]]; then 
+if [[ $CREATE_BRANCH = 1 ]]; then
     create_feature_branch $JIRA_KEY
-elif [[ $PUSH_TO_REMOTE = 1 ]]; then 
+elif [[ $DELETE_BRANCH = 1 ]]; then
+    delete_feature_branch $JIRA_KEY
+elif [[ $PUSH_TO_REMOTE = 1 ]]; then
     push_branch_to_remote
-else 
+else
     usage
 fi
