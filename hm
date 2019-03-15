@@ -8,6 +8,7 @@ usage ()
     echo "  hm branch <JIRA Key> : fork a new feature branch in git with the name AVSW-<JIRA Key>"
     echo "  hm delete <JIRA Key> : delete a feature branch in git with the name AVSW-<JIRA Key>"
     echo "  hm push : push current git commit branch to remote"
+	  echo "  hm update_bigquery: update bigquery schema when the proto file has changed"
 }
 
 create_feature_branch ()
@@ -32,10 +33,22 @@ push_branch_to_remote ()
     git push origin $CBRANCH
 }
 
+update_bigquery_schema ()
+{
+	bazel run src/backend/bigquery:bigquery_schemagen_main -- --topics /vehicle_report/wheel_speed
+  bazel run src/backend/bigquery:bigquery_schemagen_main -- --topics /vehicle_report/autonomy_event
+  bazel run src/backend/bigquery:bigquery_schemagen_main -- --topics /vehicle_report/throttle
+  bazel run src/backend/bigquery:bigquery_schemagen_main -- --topics /vehicle_report/brake
+  bazel run src/backend/bigquery:bigquery_schemagen_main -- --topics /vehicle_report/speed
+  bazel run src/backend/bigquery:bigquery_schemagen_main -- --topics /vehicle_report/steering
+  bazel run src/backend/bigquery:bigquery_schemagen_main -- --topics /vehicle_report/is_stationary
+}
+
 JIRA_KEY=""
 CREATE_BRANCH=0
 DELETE_BRANCH=0
 PUSH_TO_REMOTE=0
+UPDATE_BIGQUERY=0
 
 for i in $@
 do
@@ -57,6 +70,11 @@ case $i in
    shift
    shift
    ;;
+   update_bigquery)
+	 UPDATE_BIGQUERY=1
+	 shift
+	 shift
+	 ;;
 esac
 done
 
@@ -66,6 +84,8 @@ elif [[ $DELETE_BRANCH = 1 ]]; then
     delete_feature_branch $JIRA_KEY
 elif [[ $PUSH_TO_REMOTE = 1 ]]; then
     push_branch_to_remote
+elif [[ $UPDATE_BIGQUERY = 1 ]]; then
+		update_bigquery_schema
 else
     usage
 fi
