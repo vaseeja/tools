@@ -35,6 +35,7 @@ push_branch_to_remote ()
 
 update_bigquery_schema ()
 {
+  # TODO (generalize this to parse all topics and run for all of them)
 	bazel run src/backend/bigquery:bigquery_schemagen_main -- --topics /vehicle_report/wheel_speed
   bazel run src/backend/bigquery:bigquery_schemagen_main -- --topics /vehicle_report/autonomy_event
   bazel run src/backend/bigquery:bigquery_schemagen_main -- --topics /vehicle_report/throttle
