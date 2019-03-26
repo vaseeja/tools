@@ -9,6 +9,7 @@ usage ()
     echo "  hm delete <JIRA Key> : delete a feature branch in git with the name AVSW-<JIRA Key>"
     echo "  hm push : push current git commit branch to remote"
 	  echo "  hm update_bigquery: update bigquery schema when the proto file has changed"
+    echo "  hm extract_topic <FILES> <TOPIC>: extract a topic from a lyftbag"
 }
 
 create_feature_branch ()
@@ -43,13 +44,27 @@ update_bigquery_schema ()
   bazel run src/backend/bigquery:bigquery_schemagen_main -- --topics /vehicle_report/speed
   bazel run src/backend/bigquery:bigquery_schemagen_main -- --topics /vehicle_report/steering
   bazel run src/backend/bigquery:bigquery_schemagen_main -- --topics /vehicle_report/is_stationary
+  bazel run src/backend/bigquery:bigquery_schemagen_main -- --topics /vehicle_report/anti_lock_braking
+}
+
+extract_lyftbag_topic ()
+{
+  local LFILE=$1
+  local TOPIC=$2
+  cd $TOP
+  ./run.sh lyftbag_util -task extract -extract_format json -files "$LFILE" -topics "$TOPIC"
 }
 
 JIRA_KEY=""
+LB_FILE=""
+TOPIC=""
 CREATE_BRANCH=0
 DELETE_BRANCH=0
 PUSH_TO_REMOTE=0
 UPDATE_BIGQUERY=0
+EXTRACT_TOPIC=0
+
+export TOP=/home/lyft/src/avsoftware
 
 for i in $@
 do
@@ -76,7 +91,15 @@ case $i in
 	 shift
 	 shift
 	 ;;
-esac
+   extract_topic)
+   EXTRACT_TOPIC=1
+   LB_FILE=$2
+   TOPIC=$3
+   shift
+   shift
+   shift
+   ;;
+ esac
 done
 
 if [[ $CREATE_BRANCH = 1 ]]; then
@@ -87,6 +110,8 @@ elif [[ $PUSH_TO_REMOTE = 1 ]]; then
     push_branch_to_remote
 elif [[ $UPDATE_BIGQUERY = 1 ]]; then
 		update_bigquery_schema
+elif [[ $EXTRACT_TOPIC = 1 ]]; then
+    extract_lyftbag_topic $LB_FILE $TOPIC
 else
     usage
 fi
