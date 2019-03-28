@@ -10,6 +10,7 @@ usage ()
     echo "  hm push : push current git commit branch to remote"
 	  echo "  hm update_bigquery: update bigquery schema when the proto file has changed"
     echo "  hm extract_topic <FILES> <TOPIC>: extract a topic from a lyftbag"
+    echo "  hm plot_interval <FILES> <TOPIC>: plot a topic from a lyftbag from pub to pub interval"
 }
 
 create_feature_branch ()
@@ -53,6 +54,13 @@ extract_lyftbag_topic ()
   local TOPIC=$2
   cd $TOP
   ./run.sh lyftbag_util -task extract -extract_format json -files "$LFILE" -topics "$TOPIC"
+}
+
+plot_topic_interval ()
+{
+  local LFILE=$1
+  local TOPIC=$2
+  python3 $TOP/experimental/brianlee/plotting/pub_interval.py --topics $TOPIC $LFILE
 }
 
 JIRA_KEY=""
@@ -99,6 +107,13 @@ case $i in
    shift
    shift
    ;;
+   plot_interval)
+   PLOT_TOPIC_INTERVAL=1
+   LB_FILE=$2
+   TOPIC=$3
+   shift
+   shift
+   ;;
  esac
 done
 
@@ -112,6 +127,8 @@ elif [[ $UPDATE_BIGQUERY = 1 ]]; then
 		update_bigquery_schema
 elif [[ $EXTRACT_TOPIC = 1 ]]; then
     extract_lyftbag_topic $LB_FILE $TOPIC
+elif [[ $PLOT_TOPIC_INTERVAL = 1 ]]; then
+    plot_topic_interval $LB_FILE $TOPIC
 else
     usage
 fi
