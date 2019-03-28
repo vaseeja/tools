@@ -1,0 +1,46 @@
+#!/bin/bash
+
+# busguardian related hacks/shortcuts which increase productivity
+
+usage ()
+{
+    echo "Options available:"
+    echo "  busgd nw"
+}
+
+# TODO (vaseeja) hardcoded IP address and device name
+setup_network ()
+{
+   echo "bringing enp0s31f6 down"
+   sudo ifconfig enp0s31f6 down
+   echo "assigning IP address to enp0s31f6"
+   sudo ip ad add 10.161.0.9/24 broadcast 10.161.0.255 dev enp0s31f6
+   echo "bringing up enp0s31f6"
+   sudo ifconfig enp0s31f6 up
+   echo "check IP address"
+   ifconfig enp0s31f6
+   route -n
+   echo "launching tcpdump"
+   sudo tcpdump -i enp0s31f6
+}
+
+BUSGD_NW=0
+
+export TOP=/home/lyft/src/avsoftware
+
+for i in $@
+do
+case $i in
+   nw)
+   BUSGD_NW=1
+   shift
+   shift
+   ;;
+esac
+done
+
+if [[ $BUSGD_NW = 1 ]]; then
+    setup_network
+else
+    usage
+fi
