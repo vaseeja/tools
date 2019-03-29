@@ -53,8 +53,7 @@ extract_lyftbag_topic ()
 {
   local LFILE=$1
   local TOPIC=$2
-  cd $TOP
-  ./run.sh lyftbag_util -task extract -extract_format json -files "$LFILE" -topics "$TOPIC"
+  $TOP/run.sh lyftbag_util -task extract -extract_format json -files "$LFILE" -topics "$TOPIC" -out_dir "$PWD"
 }
 
 plot_topic_interval ()
