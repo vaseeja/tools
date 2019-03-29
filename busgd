@@ -6,6 +6,8 @@ usage ()
 {
     echo "Options available:"
     echo "  busgd nw"
+    echo "  busgd serial"
+    echo "  busgd flash"
 }
 
 # TODO (vaseeja) hardcoded IP address and device name
@@ -20,11 +22,26 @@ setup_network ()
    echo "check IP address"
    ifconfig enp0s31f6
    route -n
+   sudo arping -c 3 -s 10.161.0.9 -I enp0s31f6 10.161.0.10
    echo "launching tcpdump"
    sudo tcpdump -i enp0s31f6
 }
 
+launch_minicom ()
+{
+   sudo killall minicom
+   sudo minicom -b 115200 -D /dev/ttyUSB0 -C /tmp/mini_$(date +'%Y_%m_%d')
+}
+
+flash_busgd ()
+{
+  cd $TOP
+  bazel run //embedded/applications/bus_guardian/propulsion_control:propulsion_control_deploy_jlink
+}
+
 BUSGD_NW=0
+BUSGD_SERIAL=0
+BUSGD_FLASH=0
 
 export TOP=/home/lyft/src/avsoftware
 
@@ -36,11 +53,25 @@ case $i in
    shift
    shift
    ;;
+   serial)
+   BUSGD_SERIAL=1
+   shift
+   shift
+   ;;
+   flash)
+   BUSGD_FLASH=1
+   shift
+   shift
+   ;;
 esac
 done
 
 if [[ $BUSGD_NW = 1 ]]; then
     setup_network
+elif [[ $BUSGD_SERIAL = 1 ]]; then
+    launch_minicom
+elif [[ $BUSGD_FLASH = 1 ]]; then
+    flash_busgd
 else
     usage
 fi
