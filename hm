@@ -19,7 +19,7 @@ find_and_open_file ()
 {
   local LFILE=$1
   local LOC=$(find . -name $LFILE)
-  [[ -f $LOC ]] && vim $LOC || echo "file not found"
+  [[ -f $LOC ]] && vim $LOC || [[ -n $LOC ]] && echo -e "multiple files found: \n$LOC" || echo "file not found"
 }
 
 create_feature_branch ()
