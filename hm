@@ -12,6 +12,14 @@ usage ()
     echo "  hm extract_topic <FILES> <TOPIC>: extract a topic from a lyftbag"
     echo "  hm plot_interval <FILES> <TOPIC>: plot a topic from a lyftbag from pub to pub interval"
     echo "  hm plot_service_timing <FILES> <STAT>: plot a stat for the fusion vehicle service"
+    echo "  hm open <FILE>: find a file recursively in a given directory and open it for editing"
+}
+
+find_and_open_file ()
+{
+  local LFILE=$1
+  local LOC=$(find . -name $LFILE)
+  [[ -f $LOC ]] && vim $LOC || echo "file not found"
 }
 
 create_feature_branch ()
@@ -38,15 +46,7 @@ push_branch_to_remote ()
 
 update_bigquery_schema ()
 {
-  # TODO (generalize this to parse all topics and run for all of them)
-	bazel run src/backend/bigquery:bigquery_schemagen_main -- --topics /vehicle_report/wheel_speed
-  bazel run src/backend/bigquery:bigquery_schemagen_main -- --topics /vehicle_report/autonomy_event
-  bazel run src/backend/bigquery:bigquery_schemagen_main -- --topics /vehicle_report/throttle
-  bazel run src/backend/bigquery:bigquery_schemagen_main -- --topics /vehicle_report/brake
-  bazel run src/backend/bigquery:bigquery_schemagen_main -- --topics /vehicle_report/speed
-  bazel run src/backend/bigquery:bigquery_schemagen_main -- --topics /vehicle_report/steering
-  bazel run src/backend/bigquery:bigquery_schemagen_main -- --topics /vehicle_report/is_stationary
-  bazel run src/backend/bigquery:bigquery_schemagen_main -- --topics /vehicle_report/anti_lock_braking
+  ./avctl analytics
 }
 
 extract_lyftbag_topic ()
@@ -75,6 +75,7 @@ JIRA_KEY=""
 LB_FILE=""
 TOPIC=""
 STAT=""
+TARGET_FILE=""
 CREATE_BRANCH=0
 DELETE_BRANCH=0
 PUSH_TO_REMOTE=0
@@ -82,6 +83,7 @@ UPDATE_BIGQUERY=0
 EXTRACT_TOPIC=0
 PLOT_TOPIC_INTERVAL=0
 PLOT_SERVICE_TIMING=0
+OPEN_FILE=0
 
 export TOP=/home/lyft/src/avsoftware
 
@@ -132,6 +134,12 @@ case $i in
    shift
    shift
    ;;
+   open)
+   OPEN_FILE=1
+   TARGET_FILE=$2
+   shift
+   shift
+   ;;
  esac
 done
 
@@ -149,6 +157,8 @@ elif [[ $PLOT_TOPIC_INTERVAL = 1 ]]; then
     plot_topic_interval $LB_FILE $TOPIC
 elif [[ $PLOT_SERVICE_TIMING = 1 ]]; then
     plot_service_timing $LB_FILE $STAT
+elif [[ $OPEN_FILE = 1 ]]; then
+    find_and_open_file $TARGET_FILE
 else
     usage
 fi
