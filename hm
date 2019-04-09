@@ -8,6 +8,7 @@ usage ()
     echo "  hm branch <JIRA Key> : fork a new feature branch in git with the name AVSW-<JIRA Key>"
     echo "  hm delete <JIRA Key> : delete a feature branch in git with the name AVSW-<JIRA Key>"
     echo "  hm push : push current git commit branch to remote"
+    echo "  hm merge_branch <SRC_BRANCH> <DST_BRANCH> : merge source branch to destination branch"
 	  echo "  hm update_bigquery: update bigquery schema when the proto file has changed"
     echo "  hm extract_topic <FILES> <TOPIC>: extract a topic from a lyftbag"
     echo "  hm plot_interval <FILES> <TOPIC>: plot a topic from a lyftbag from pub to pub interval"
@@ -44,6 +45,24 @@ push_branch_to_remote ()
     git push origin $CBRANCH
 }
 
+merge_branch ()
+{
+  local SBRANCH=$1
+  local DBRANCH=$2
+  echo "[hm] merge $SBRANCH to $DBRANCH"
+  echo "[hm] checkout $DBRANCH"
+  git checkout $DBRANCH
+  echo "[hm] fetch and pull from origin"
+  git fetch origin
+  git pull
+  local LBRANCH="$(echo ${DBRANCH} | tr '/' '_')_with_latest_${SBRANCH}_$(date +%Y%m%d)"
+  echo "[hm] creating branch $LBRANCH"
+  git checkout -b $LBRANCH
+  echo "[hm] merging $SBRANCH to $LBRANCH"
+  git merge origin $SBRANCH
+}
+
+
 update_bigquery_schema ()
 {
   ./avctl analytics
@@ -75,9 +94,12 @@ JIRA_KEY=""
 LB_FILE=""
 TOPIC=""
 STAT=""
+SRC_BRANCH=""
+DST_BRANCH=""
 TARGET_FILE=""
 CREATE_BRANCH=0
 DELETE_BRANCH=0
+MERGE_BRANCH=0
 PUSH_TO_REMOTE=0
 UPDATE_BIGQUERY=0
 EXTRACT_TOPIC=0
@@ -104,6 +126,14 @@ case $i in
    ;;
    push)
    PUSH_TO_REMOTE=1
+   shift
+   shift
+   ;;
+   merge_branch)
+   MERGE_BRANCH=1
+   SRC_BRANCH=$2
+   DST_BRANCH=$3
+   shift
    shift
    shift
    ;;
@@ -149,6 +179,8 @@ elif [[ $DELETE_BRANCH = 1 ]]; then
     delete_feature_branch $JIRA_KEY
 elif [[ $PUSH_TO_REMOTE = 1 ]]; then
     push_branch_to_remote
+elif [[ $MERGE_BRANCH = 1 ]]; then
+    merge_branch $SRC_BRANCH $DST_BRANCH
 elif [[ $UPDATE_BIGQUERY = 1 ]]; then
 		update_bigquery_schema
 elif [[ $EXTRACT_TOPIC = 1 ]]; then
