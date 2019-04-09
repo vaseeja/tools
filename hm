@@ -59,7 +59,7 @@ merge_branch ()
   echo "[hm] creating branch $LBRANCH"
   git checkout -b $LBRANCH
   echo "[hm] merging $SBRANCH to $LBRANCH"
-  git merge origin $SBRANCH
+  git merge origin/$SBRANCH
 }
 
 
