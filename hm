@@ -10,7 +10,7 @@ usage ()
     echo "  hm push : push current git commit branch to remote"
     echo "  hm merge_branch <SRC_BRANCH> <DST_BRANCH> : merge source branch to destination branch"
 	  echo "  hm update_bigquery: update bigquery schema when the proto file has changed"
-    echo "  hm extract_topic <FILES> <TOPIC>: extract a topic from a lyftbag"
+    echo "  hm get_topic <FILES> <TOPIC>: extract a topic from a lyftbag"
     echo "  hm plot_interval <FILES> <TOPIC>: plot a topic from a lyftbag from pub to pub interval"
     echo "  hm plot_service_timing <FILES> <STAT>: plot a stat for the fusion vehicle service"
     echo "  hm open <FILE>: find a file recursively in a given directory and open it for editing"
@@ -146,7 +146,7 @@ case $i in
 	 shift
 	 shift
 	 ;;
-   extract_topic)
+   get_topic)
    EXTRACT_TOPIC=1
    LB_FILE=$2
    TOPIC=$3
