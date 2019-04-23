@@ -14,6 +14,14 @@ usage ()
     echo "  hm plot_interval <FILES> <TOPIC>: plot a topic from a lyftbag from pub to pub interval"
     echo "  hm plot_service_timing <FILES> <STAT>: plot a stat for the fusion vehicle service"
     echo "  hm open <FILE>: find a file recursively in a given directory and open it for editing"
+    echo "  hm build <TARGET>: build a target corresponding to a bazel target"
+}
+
+build_target ()
+{
+  declare -A build_map
+  cd $TOP
+  #TODO map fusion and pacifica build names and invoke avctl with target path
 }
 
 find_and_open_file ()
@@ -110,6 +118,7 @@ EXTRACT_TOPIC=0
 PLOT_TOPIC_INTERVAL=0
 PLOT_SERVICE_TIMING=0
 OPEN_FILE=0
+BUILD_AVCTL=0
 
 export TOP=/home/lyft/src/avsoftware
 
@@ -174,6 +183,12 @@ case $i in
    shift
    shift
    ;;
+   build)
+   BUILD_AVCTL=1
+   BUILD_TARGET=$2
+   shift
+   shift
+   ;;
  esac
 done
 
@@ -195,6 +210,8 @@ elif [[ $PLOT_SERVICE_TIMING = 1 ]]; then
     plot_service_timing $LB_FILE $STAT
 elif [[ $OPEN_FILE = 1 ]]; then
     find_and_open_file $TARGET_FILE
+elif [[ $BUILD_AVCTL = 1 ]]; then
+    build_target $BUILD_TARGET
 else
     usage
 fi

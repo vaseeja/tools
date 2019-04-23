@@ -8,6 +8,7 @@ usage ()
     echo "  busgd nw"
     echo "  busgd serial"
     echo "  busgd flash"
+    echo "  busgd build <target>"
 }
 
 # TODO (vaseeja) hardcoded IP address and device name
@@ -36,12 +37,24 @@ launch_minicom ()
 flash_busgd ()
 {
   cd $TOP
-  bazel run //embedded/applications/bus_guardian/propulsion_control:propulsion_control_deploy_jlink
+  # bazel run //embedded/applications/bus_guardian/propulsion_control:propulsion_control_deploy_jlink
+  local DSLINK=$(find ~/.cache/bazel/_bazel_lyft/ -name DSLite)
+  local CFG_FILE=bazel/platforms/tms570ls3137/TMS570LS3137_JLink.ccxml
+  local HEX_FILE=bazel-bin/embedded/applications/bus_guardian/$1_control/$1_control.hex
+  sudo $DSLINK flash --config $CFG_FILE --verbose $HEX_FILE
+}
+
+build_bg ()
+{
+  cd $TOP
+  ./avctl build //embedded/applications/bus_guardian/$1_control
 }
 
 BUSGD_NW=0
 BUSGD_SERIAL=0
 BUSGD_FLASH=0
+BUSGD_BUILD=0
+BUSGD_TARGET=""
 
 export TOP=/home/lyft/src/avsoftware
 
@@ -60,6 +73,13 @@ case $i in
    ;;
    flash)
    BUSGD_FLASH=1
+   BUSGD_TARGET=$2
+   shift
+   shift
+   ;;
+   build)
+   BUSGD_BUILD=1
+   BUSGD_TARGET=$2
    shift
    shift
    ;;
@@ -71,7 +91,9 @@ if [[ $BUSGD_NW = 1 ]]; then
 elif [[ $BUSGD_SERIAL = 1 ]]; then
     launch_minicom
 elif [[ $BUSGD_FLASH = 1 ]]; then
-    flash_busgd
+    flash_busgd $BUSGD_TARGET
+elif [[ $BUSGD_BUILD = 1 ]]; then
+    build_bg $BUSGD_TARGET
 else
     usage
 fi
