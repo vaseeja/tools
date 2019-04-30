@@ -14,18 +14,20 @@ usage ()
 # TODO (vaseeja) hardcoded IP address and device name
 setup_network ()
 {
-   echo "bringing enp0s31f6 down"
-   sudo ifconfig enp0s31f6 down
-   echo "assigning IP address to enp0s31f6"
-   sudo ip ad add 10.161.0.9/24 broadcast 10.161.0.255 dev enp0s31f6
-   echo "bringing up enp0s31f6"
-   sudo ifconfig enp0s31f6 up
+#	 local INTERFACE="enx0000000140fa"
+	 local INTERFACE="enx00e04c013271"
+   echo "bringing $INTERFACE down"
+   sudo ifconfig $INTERFACE down
+   echo "assigning IP address to $INTERFACE"
+   sudo ip ad add 10.161.0.11/24 broadcast 10.161.0.255 dev $INTERFACE
+   echo "bringing up $INTERFACE"
+   sudo ifconfig $INTERFACE up
    echo "check IP address"
-   ifconfig enp0s31f6
+   ifconfig $INTERFACE
+   sudo route add -net 10.161.0.0 netmask 255.255.255.0 gw 10.161.0.11
    route -n
-   sudo arping -c 3 -s 10.161.0.9 -I enp0s31f6 10.161.0.10
-   echo "launching tcpdump"
-   sudo tcpdump -i enp0s31f6
+   sleep 1.5
+   sudo ping -c 5 10.161.0.10
 }
 
 launch_minicom ()
@@ -38,10 +40,12 @@ flash_busgd ()
 {
   cd $TOP
   # bazel run //embedded/applications/bus_guardian/propulsion_control:propulsion_control_deploy_jlink
-  local DSLINK=$(find ~/.cache/bazel/_bazel_lyft/ -name DSLite)
+  local DSLINK=$(find /home/lyft/.cache/bazel/_bazel_lyft/ -name DSLite)
   local CFG_FILE=bazel/platforms/tms570ls3137/TMS570LS3137_JLink.ccxml
   local HEX_FILE=bazel-bin/embedded/applications/bus_guardian/$1_control/$1_control.hex
-  sudo $DSLINK flash --config $CFG_FILE --verbose $HEX_FILE
+  local CMD="sudo $DSLINK flash --config $CFG_FILE --verbose $HEX_FILE"
+  echo $CMD
+  `$CMD`
 }
 
 build_bg ()
@@ -76,10 +80,12 @@ case $i in
    BUSGD_TARGET=$2
    shift
    shift
+   shift
    ;;
    build)
    BUSGD_BUILD=1
    BUSGD_TARGET=$2
+   shift
    shift
    shift
    ;;
