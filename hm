@@ -15,6 +15,7 @@ usage ()
     echo "  hm plot_service_timing <FILES> <STAT>: plot a stat for the fusion vehicle service"
     echo "  hm open <FILE>: find a file recursively in a given directory and open it for editing"
     echo "  hm build <TARGET>: build a target corresponding to a bazel target"
+    echo "  hm release_notes" 
 }
 
 build_target ()
@@ -74,6 +75,21 @@ merge_branch ()
   git merge origin/$SBRANCH
 }
 
+release_notes () 
+{ 
+  cd $TOP 
+  printf "\n"
+  echo "# Commits added"
+  printf "\n"
+  echo "Please add the tests needed for each of these commits." 
+  printf "\n"
+  echo "| Done | Contributor | Description | tag |" 
+  echo "|----|----|----|---|"
+  git log --pretty=format:'|N|%ae|%s|%Cred%h%Creset|' --abbrev-commit --date=relative master..deliver/integration
+  printf "\n" 
+  echo "# Testing Methodology"
+  git log --pretty=format:'%Cred%h%Creset - %ae' --abbrev-commit --date=relative master..deliver/integration
+}
 
 update_bigquery_schema ()
 {
@@ -119,6 +135,7 @@ PLOT_TOPIC_INTERVAL=0
 PLOT_SERVICE_TIMING=0
 OPEN_FILE=0
 BUILD_AVCTL=0
+RELEASE_NOTES=0
 
 export TOP=/home/lyft/src/avsoftware
 
@@ -189,6 +206,10 @@ case $i in
    shift
    shift
    ;;
+   release_notes)
+   RELEASE_NOTES=1
+   shift
+   ;;    
  esac
 done
 
@@ -201,7 +222,7 @@ elif [[ $PUSH_TO_REMOTE = 1 ]]; then
 elif [[ $MERGE_BRANCH = 1 ]]; then
     merge_branch $SRC_BRANCH $DST_BRANCH
 elif [[ $UPDATE_BIGQUERY = 1 ]]; then
-		update_bigquery_schema
+    update_bigquery_schema
 elif [[ $EXTRACT_TOPIC = 1 ]]; then
     extract_lyftbag_topic $LB_FILE $TOPIC
 elif [[ $PLOT_TOPIC_INTERVAL = 1 ]]; then
@@ -212,6 +233,8 @@ elif [[ $OPEN_FILE = 1 ]]; then
     find_and_open_file $TARGET_FILE
 elif [[ $BUILD_AVCTL = 1 ]]; then
     build_target $BUILD_TARGET
+elif [[ $RELEASE_NOTES = 1 ]]; then
+    release_notes
 else
     usage
 fi
