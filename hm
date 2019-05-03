@@ -14,8 +14,9 @@ usage ()
     echo "  hm plot_interval <FILES> <TOPIC>: plot a topic from a lyftbag from pub to pub interval"
     echo "  hm plot_service_timing <FILES> <STAT>: plot a stat for the fusion vehicle service"
     echo "  hm open <FILE>: find a file recursively in a given directory and open it for editing"
+    echo "  hm revert_file <FILE> <REMOTE_BRANCH>: revert a file from a PR to its state in remote branch"
     echo "  hm build <TARGET>: build a target corresponding to a bazel target"
-    echo "  hm release_notes" 
+    echo "  hm release_notes"
 }
 
 build_target ()
@@ -75,20 +76,28 @@ merge_branch ()
   git merge origin/$SBRANCH
 }
 
-release_notes () 
-{ 
-  cd $TOP 
+release_notes ()
+{
+  cd $TOP
   printf "\n"
   echo "# Commits added"
   printf "\n"
-  echo "Please add the tests needed for each of these commits." 
+  echo "Please add the tests needed for each of these commits."
   printf "\n"
-  echo "| Done | Contributor | Description | tag |" 
+  echo "| Done | Contributor | Description | tag |"
   echo "|----|----|----|---|"
   git log --pretty=format:'|N|%ae|%s|%Cred%h%Creset|' --abbrev-commit --date=relative master..deliver/integration
-  printf "\n" 
+  printf "\n"
   echo "# Testing Methodology"
   git log --pretty=format:'%Cred%h%Creset - %ae' --abbrev-commit --date=relative master..deliver/integration
+}
+
+revert_file () {
+  local RBRANCH=$2
+  local RFILE=$1
+  echo "reverting file $RFILE to its state in $RBRANCH"
+  git checkout origin/$RBRANCH -- $RFILE
+  push_branch_to_remote
 }
 
 update_bigquery_schema ()
@@ -136,6 +145,7 @@ PLOT_SERVICE_TIMING=0
 OPEN_FILE=0
 BUILD_AVCTL=0
 RELEASE_NOTES=0
+REVERT_FILE=0
 
 export TOP=/home/lyft/src/avsoftware
 
@@ -209,7 +219,15 @@ case $i in
    release_notes)
    RELEASE_NOTES=1
    shift
-   ;;    
+   ;;
+   revert_file)
+   REVERT_FILE=1
+   TARGET_FILE=$2
+   DST_BRANCH=$3
+   shift
+   shift
+   shift
+   ;;
  esac
 done
 
@@ -235,6 +253,8 @@ elif [[ $BUILD_AVCTL = 1 ]]; then
     build_target $BUILD_TARGET
 elif [[ $RELEASE_NOTES = 1 ]]; then
     release_notes
+elif [[ $REVERT_FILE = 1 ]]; then
+    revert_file $TARGET_FILE $DST_BRANCH
 else
     usage
 fi
