@@ -19,15 +19,15 @@ setup_network ()
    echo "bringing $INTERFACE down"
    sudo ifconfig $INTERFACE down
    echo "assigning IP address to $INTERFACE"
-   sudo ip ad add 10.161.0.11/24 broadcast 10.161.0.255 dev $INTERFACE
+   sudo ip ad add 10.161.0.2/24 broadcast 10.161.0.255 dev $INTERFACE
    echo "bringing up $INTERFACE"
    sudo ifconfig $INTERFACE up
    echo "check IP address"
    ifconfig $INTERFACE
-   sudo route add -net 10.161.0.0 netmask 255.255.255.0 gw 10.161.0.11
+   sudo route add -net 10.161.0.0 netmask 255.255.255.0 gw 10.161.0.2
    route -n
    sleep 1.5
-   sudo ping -c 5 10.161.0.10
+   sudo ping -c 7 10.161.0.10
 }
 
 launch_minicom ()
