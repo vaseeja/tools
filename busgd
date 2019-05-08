@@ -14,7 +14,7 @@ usage ()
 # TODO (vaseeja) hardcoded IP address and device name
 setup_network ()
 {
-#	 local INTERFACE="enx0000000140fa"
+   sudo ifconfig br-avprivate down
 	 local INTERFACE="enx00e04c013271"
    echo "bringing $INTERFACE down"
    sudo ifconfig $INTERFACE down
