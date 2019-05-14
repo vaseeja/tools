@@ -68,7 +68,7 @@ push_branch_to_remote ()
     local CBRANCH=$(git rev-parse --abbrev-ref HEAD)
     echo "[hm] running lint prior to push"
     cd $TOP
-    $TOP/avctl lint -i
+    $TOP/avctl lint -i --tracked_only
     git commit -am "lint"
     echo "[hm] current git branch: $CBRANCH"
     echo "[hm] pushing commit to remote"
