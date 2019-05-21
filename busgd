@@ -39,13 +39,14 @@ launch_minicom ()
 flash_busgd ()
 {
   cd $TOP
+  sudo  /home/lyft/.cache/bazel/_bazel_lyft/6de58db54f5ebc38127e731d0c917ae1/external/ti_uniflash/uniflash_4.3.0/deskdb/content/TICloudAgent/linux/ccs_base/DebugServer/bin/DSLite flash --config=bazel/platforms/tms570ls3137/TMS570LS3137_XDS100v2.ccxml --verbose $TOP/bazel-bin/embedded/applications/motion_control_ecu/$1_control/bin_tms570.hex
   # bazel run //embedded/applications/bus_guardian/propulsion_control:propulsion_control_deploy_jlink
-  local DSLINK=$(find /home/lyft/.cache/bazel/_bazel_lyft/ -name DSLite)
-  local CFG_FILE=bazel/platforms/tms570ls3137/TMS570LS3137_JLink.ccxml
-  local HEX_FILE=bazel-bin/embedded/applications/bus_guardian/$1_control/$1_control.hex
-  local CMD="sudo $DSLINK flash --config $CFG_FILE --verbose $HEX_FILE"
-  echo $CMD
-  `$CMD`
+  # local DSLINK=$(find /home/lyft/.cache/bazel/_bazel_lyft/ -name DSLite)
+  # local CFG_FILE=bazel/platforms/tms570ls3137/TMS570LS3137_JLink.ccxml
+  # local HEX_FILE=bazel-bin/embedded/applications/bus_guardian/$1_control/$1_control.hex
+  # local CMD="sudo $DSLINK flash --config $CFG_FILE --verbose $HEX_FILE"
+  # echo $CMD
+  # `$CMD`
 }
 
 build_bg ()
