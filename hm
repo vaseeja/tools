@@ -139,7 +139,7 @@ plot_service_timing ()
 {
   local LFILE=$1
   local STAT=$2
-  local SERVICE="fusion_vehicle_service"
+  local SERVICE=$3
   python3 $TOP/experimental/brianlee/plotting/service_timing.py --stat $STAT --service $SERVICE $LFILE
 }
 
@@ -151,6 +151,7 @@ SRC_BRANCH=""
 DST_BRANCH=""
 TARGET_FILE=""
 TARGET=""
+SERVICE=""
 BUILD_AVCTL=0
 COPY_LB=0
 CREATE_BRANCH=0
@@ -220,6 +221,8 @@ case $i in
    PLOT_SERVICE_TIMING=1
    LB_FILE=$2
    STAT=$3
+   SERVICE=$4
+   shift
    shift
    shift
    ;;
@@ -275,7 +278,7 @@ elif [[ $EXTRACT_TOPIC = 1 ]]; then
 elif [[ $PLOT_TOPIC_INTERVAL = 1 ]]; then
     plot_topic_interval $LB_FILE $TOPIC
 elif [[ $PLOT_SERVICE_TIMING = 1 ]]; then
-    plot_service_timing $LB_FILE $STAT
+    plot_service_timing $LB_FILE $STAT $SERVICE
 elif [[ $OPEN_FILE = 1 ]]; then
     find_and_open_file $TARGET_FILE
 elif [[ $BUILD_AVCTL = 1 ]]; then
