@@ -18,7 +18,18 @@ usage ()
     echo "  hm build <TARGET>: build a target corresponding to a bazel target"
     echo "  hm start <TARGET>: start a local scm session"
     echo "  hm copy_lb: copy latest lyftbag from local logs"
+    echo "  hm download <START_TIME> <END_TIME> <CAR_ID>: download lyftbag"
     echo "  hm release_notes"
+}
+
+download_data ()
+{
+  cd $TOP
+  local START_TIME=$1
+  local END_TIME=$2
+  local CAR_ID=$3
+  ./run.sh download_data --min_time_ns="${START_TIME}000000" --max_time_ns="${END_TIME}000000" --car_id=$CAR_ID
+  mv $TOP/download_data/* $PWD/
 }
 
 start_target ()
@@ -113,7 +124,7 @@ revert_file () {
   local RFILE=$1
   echo "reverting file $RFILE to its state in $RBRANCH"
   git checkout origin/$RBRANCH -- $RFILE
-  push_branch_to_remote
+#  push_branch_to_remote
 }
 
 update_bigquery_schema ()
@@ -132,7 +143,7 @@ plot_topic_interval ()
 {
   local LFILE=$1
   local TOPIC=$2
-  python3 $TOP/experimental/brianlee/plotting/pub_interval.py --topics $TOPIC $LFILE
+  python3 $TOP/experimental/brianlee/plotting/pub_interval.py  $LFILE --topics $TOPIC
 }
 
 plot_service_timing ()
@@ -166,6 +177,7 @@ RELEASE_NOTES=0
 REVERT_FILE=0
 START_TARGET=0
 UPDATE_BIGQUERY=0
+DOWNLOAD_DATA=0
 
 export TOP=/home/lyft/src/avsoftware
 
@@ -260,6 +272,15 @@ case $i in
    COPY_LB=1
    shift
    ;;
+   download_data)
+   DOWNLOAD_DATA=1
+   START_TIME=$2
+   END_TIME=$3
+   CAR_ID=$4
+   shift
+   shift
+   shift
+   ;;
  esac
 done
 
@@ -291,6 +312,8 @@ elif [[ $START_TARGET = 1 ]]; then
     start_target $TARGET
 elif [[ $COPY_LB = 1 ]]; then
     copy_latest_lyftbag
+elif [[ $DOWNLOAD_DATA = 1 ]]; then
+    download_data $START_TIME $END_TIME $CAR_ID
 else
     usage
 fi
