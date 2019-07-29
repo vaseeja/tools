@@ -18,18 +18,32 @@ usage ()
     echo "  hm build <TARGET>: build a target corresponding to a bazel target"
     echo "  hm start <TARGET>: start a local scm session"
     echo "  hm copy_lb: copy latest lyftbag from local logs"
-    echo "  hm download <START_TIME> <END_TIME> <CAR_ID>: download lyftbag"
+    echo "  hm download <START_TIME> <END_TIME> <CAR_ID> <TOPICS>: download lyftbag"
     echo "  hm release_notes"
+    echo "  hm plot_peak_can <LYFTBAG>"
+    echo "  hm plot_can <LYFTBAG>"
+}
+
+plot_peak_can ()
+{
+    python3 $TOP/experimental/vaseeja/peak_can_interval.py $1 --topics /peak_can_channel_2/receive_data --can_ids 97,99,101,105
+}
+
+plot_can ()
+{
+    python3 $TOP/experimental/brianlee/plotting/can_interval.py $1 --topics /can_peripheral_to_host_2 --can_ids 97,99,101,105
 }
 
 download_data ()
 {
+  CUR_DIR=$(pwd)
   cd $TOP
   local START_TIME=$1
   local END_TIME=$2
   local CAR_ID=$3
-  ./run.sh download_data --min_time_ns="${START_TIME}000000" --max_time_ns="${END_TIME}000000" --car_id=$CAR_ID
-  mv $TOP/download_data/* $PWD/
+  local TOPICS=$4
+  ./run.sh download_data --min_time_ns="${START_TIME}000000" --max_time_ns="${END_TIME}000000" --car_id=$CAR_ID --topics $TOPICS
+  mv $TOP/download_data/* $CUR_DIR
 }
 
 start_target ()
@@ -71,7 +85,7 @@ delete_feature_branch ()
 {
     local FBRANCH="AVSW-$1"
     echo "[hm] deleting feature branch $FBRANCH"
-    git branch -d $FBRANCH
+    git branch -D $FBRANCH
 }
 
 push_branch_to_remote ()
@@ -178,6 +192,8 @@ REVERT_FILE=0
 START_TARGET=0
 UPDATE_BIGQUERY=0
 DOWNLOAD_DATA=0
+PLOT_PEAK_CAN=0
+PLOT_CAN=0
 
 export TOP=/home/lyft/src/avsoftware
 
@@ -277,8 +293,20 @@ case $i in
    START_TIME=$2
    END_TIME=$3
    CAR_ID=$4
+   TOPICS=$5
    shift
    shift
+   shift
+   shift
+   ;;
+   plot_peak_can)
+   PLOT_PEAK_CAN=1
+   LB_FILE=$2
+   shift
+   ;;
+   plot_can)
+   PLOT_CAN=1
+   LB_FILE=$2
    shift
    ;;
  esac
@@ -313,7 +341,11 @@ elif [[ $START_TARGET = 1 ]]; then
 elif [[ $COPY_LB = 1 ]]; then
     copy_latest_lyftbag
 elif [[ $DOWNLOAD_DATA = 1 ]]; then
-    download_data $START_TIME $END_TIME $CAR_ID
+    download_data $START_TIME $END_TIME $CAR_ID $TOPICS
+elif [[ $PLOT_PEAK_CAN = 1 ]]; then
+    plot_peak_can $LB_FILE
+elif [[ $PLOT_CAN = 1 ]]; then
+    plot_can $LB_FILE
 else
     usage
 fi
