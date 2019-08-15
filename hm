@@ -42,11 +42,11 @@ download_data ()
   local END_TIME=$2
   local CAR_ID=$3
   local TOPICS=$4
-  cmd="./run.sh download_data --min_time_ns="${START_TIME}000000" --max_time_ns="${END_TIME}000000" --car_id=$CAR_ID"
-  if [ -z "$TOPICS" ]; then
+  cmd="./avctl run src/backend/tools:download_data -- -- --min_time_ns="${START_TIME}000000" --max_time_ns="${END_TIME}000000" --car_id=$CAR_ID"
+  if [ -n "$TOPICS" ]; then
     cmd="$cmd --topics $TOPICS"
   fi
-  $(cmd)
+  "$cmd --no-provision"
   mv $TOP/download_data/* $CUR_DIR
 }
 
@@ -154,7 +154,7 @@ extract_lyftbag_topic ()
 {
   local LFILE=$1
   local TOPIC=$2
-  $TOP/run.sh lyftbag_util -task extract -extract_format json -files "$LFILE" -topics "$TOPIC" -out_dir "$PWD"
+  $TOP/bazel-bin/src/avs/tools/lyftbag_util/lyftbag_util -task extract -extract_format json -files "$LFILE" -topics "$TOPIC" -out_dir "$PWD"
 }
 
 plot_topic_interval ()
