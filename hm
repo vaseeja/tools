@@ -26,12 +26,14 @@ usage ()
 
 plot_peak_can ()
 {
-    python3 $TOP/experimental/vaseeja/peak_can_interval.py $1 --topics /peak_can_channel_2/receive_data --can_ids 97,99,101,105
+    # python3 $TOP/experimental/vaseeja/peak_can_interval.py $1 --topics /peak_can_channel_2/receive_data,/peak_can_channel_2/send_data --can_ids 97,98,99,100,101,102,105
+    python3 $TOP/experimental/vaseeja/peak_can_interval.py $1 --topics /peak_can_channel_2/receive_data,/peak_can_channel_2/send_data --can_ids 97,98
 }
 
 plot_can ()
 {
-    python3 $TOP/experimental/brianlee/plotting/can_interval.py $1 --topics /can_peripheral_to_host_2 --can_ids 97,99,101,105
+    # python3 $TOP/experimental/brianlee/plotting/can_interval.py $1 --topics /can_peripheral_to_host_2 --can_ids 97,99,101,105
+    python3 $TOP/experimental/brianlee/plotting/can_interval.py $1 --topics /can_host_to_peripheral_2,/can_peripheral_to_host_2 --can_ids 96,98,100
 }
 
 download_data ()
@@ -42,12 +44,12 @@ download_data ()
   local END_TIME=$2
   local CAR_ID=$3
   local TOPICS=$4
-  cmd="./avctl run src/backend/tools:download_data -- -- --min_time_ns="${START_TIME}000000" --max_time_ns="${END_TIME}000000" --car_id=$CAR_ID"
+  cmd="./avctl run --no-provision src/backend/tools:download_data -- -- --min_time_ns="${START_TIME}000000" --max_time_ns="${END_TIME}000000" --car_id=$CAR_ID --output_dir_name=/tmp/lyftbags"
   if [ -n "$TOPICS" ]; then
     cmd="$cmd --topics $TOPICS"
   fi
-  "$cmd --no-provision"
-  mv $TOP/download_data/* $CUR_DIR
+  $cmd
+  mv /tmp/lyftbags/* $CUR_DIR
 }
 
 start_target ()
