@@ -15,7 +15,7 @@ usage ()
 setup_network ()
 {
    sudo ifconfig br-avprivate down
-	 local INTERFACE="enx00e04c013271"
+   local INTERFACE=$1
    echo "bringing $INTERFACE down"
    sudo ifconfig $INTERFACE down
    echo "assigning IP address to $INTERFACE"
@@ -26,20 +26,18 @@ setup_network ()
    ifconfig $INTERFACE
    sudo route add -net 10.161.0.0 netmask 255.255.255.0 gw 10.161.0.2
    route -n
-   sleep 1.5
-   sudo ping -c 7 10.161.0.10
 }
 
 launch_minicom ()
 {
    sudo killall minicom
-   sudo minicom -b 115200 -D /dev/ttyUSB0 -C /tmp/mini_$(date +'%Y_%m_%d')
+   sudo minicom -b 115200 -D /dev/ttyUSB0 -C /tmp/mini_$(date +'%Y_%m_%d') -o
 }
 
 flash_busgd ()
 {
   cd $TOP
-  sudo  /home/lyft/.cache/bazel/_bazel_lyft/6de58db54f5ebc38127e731d0c917ae1/external/ti_uniflash/uniflash_4.3.0/deskdb/content/TICloudAgent/linux/ccs_base/DebugServer/bin/DSLite flash --config=bazel/platforms/tms570ls3137/TMS570LS3137_XDS100v2.ccxml --verbose $TOP/bazel-bin/embedded/applications/motion_control_ecu/$1_control/bin_tms570.hex
+  sudo  /home/lyft/.cache/bazel/_bazel_lyft/6de58db54f5ebc38127e731d0c917ae1/external/ti_uniflash/uniflash_4.3.0/deskdb/content/TICloudAgent/linux/ccs_base/DebugServer/bin/DSLite flash --config=bazel/platforms/tms570ls3137/TMS570LS3137_XDS100v2.ccxml --verbose $TOP/bazel-bin/mbedded/applications/motion_control_ecu/$1_control/bin_tms570.hex
   # bazel run //embedded/applications/bus_guardian/propulsion_control:propulsion_control_deploy_jlink
   # local DSLINK=$(find /home/lyft/.cache/bazel/_bazel_lyft/ -name DSLite)
   # local CFG_FILE=bazel/platforms/tms570ls3137/TMS570LS3137_JLink.ccxml
@@ -60,6 +58,7 @@ BUSGD_SERIAL=0
 BUSGD_FLASH=0
 BUSGD_BUILD=0
 BUSGD_TARGET=""
+BUSGD_INTERFACE=""
 
 export TOP=/home/lyft/src/avsoftware
 
@@ -67,6 +66,7 @@ for i in $@
 do
 case $i in
    nw)
+   BUSGD_INTERFACE=$2
    BUSGD_NW=1
    shift
    shift
@@ -94,7 +94,7 @@ esac
 done
 
 if [[ $BUSGD_NW = 1 ]]; then
-    setup_network
+    setup_network $BUSGD_INTERFACE
 elif [[ $BUSGD_SERIAL = 1 ]]; then
     launch_minicom
 elif [[ $BUSGD_FLASH = 1 ]]; then
