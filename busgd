@@ -5,10 +5,9 @@
 usage ()
 {
     echo "Options available:"
-    echo "  busgd nw"
+    echo "  busgd nw <INTERFACE>"
     echo "  busgd serial"
     echo "  busgd flash"
-    echo "  busgd build <target>"
 }
 
 # TODO (vaseeja) hardcoded IP address and device name
@@ -57,7 +56,6 @@ BUSGD_NW=0
 BUSGD_SERIAL=0
 BUSGD_FLASH=0
 BUSGD_BUILD=0
-BUSGD_TARGET=""
 BUSGD_INTERFACE=""
 
 export TOP=/home/lyft/src/avsoftware
@@ -83,13 +81,6 @@ case $i in
    shift
    shift
    ;;
-   build)
-   BUSGD_BUILD=1
-   BUSGD_TARGET=$2
-   shift
-   shift
-   shift
-   ;;
 esac
 done
 
@@ -99,8 +90,6 @@ elif [[ $BUSGD_SERIAL = 1 ]]; then
     launch_minicom
 elif [[ $BUSGD_FLASH = 1 ]]; then
     flash_busgd $BUSGD_TARGET
-elif [[ $BUSGD_BUILD = 1 ]]; then
-    build_bg $BUSGD_TARGET
 else
     usage
 fi

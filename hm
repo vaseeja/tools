@@ -22,12 +22,21 @@ usage ()
     echo "  hm release_notes"
     echo "  hm plot_peak_can <LYFTBAG>"
     echo "  hm plot_can <LYFTBAG>"
+    echo "  hm run_sim"
+}
+
+plot_topic()
+{
+    local LB_PATH = $1
+    local TOPIC = $2
+    cd $TOP
+    bazel run //scripts:plot -- -i $LB_PATH  -f $TOPIC
 }
 
 plot_peak_can ()
 {
     # python3 $TOP/experimental/vaseeja/peak_can_interval.py $1 --topics /peak_can_channel_2/receive_data,/peak_can_channel_2/send_data --can_ids 97,98,99,100,101,102,105
-    python3 $TOP/experimental/vaseeja/peak_can_interval.py $1 --topics /peak_can_channel_2/receive_data,/peak_can_channel_2/send_data --can_ids 97,98
+    python3 $TOP/experimental/vaseeja/peak_can_interval.py $1 --topics /peak_can_channel_2/receive_data,/peak_can_channel_2/send_data --can_ids 97,98,99,100,101
 }
 
 plot_can ()
@@ -174,6 +183,12 @@ plot_service_timing ()
   python3 $TOP/experimental/brianlee/plotting/service_timing.py --stat $STAT --service $SERVICE $LFILE
 }
 
+run_sim ()
+{
+    cd $TOP
+    ./avctl run //config/activities:autonomy_sim --instance=aut_sim_host
+}
+
 JIRA_KEY=""
 LB_FILE=""
 TOPIC=""
@@ -200,6 +215,7 @@ UPDATE_BIGQUERY=0
 DOWNLOAD_DATA=0
 PLOT_PEAK_CAN=0
 PLOT_CAN=0
+RUN_SIM=0
 
 export TOP=/home/lyft/src/avsoftware
 
@@ -315,6 +331,10 @@ case $i in
    LB_FILE=$2
    shift
    ;;
+   run_sim)
+   RUN_SIM=1
+   shift
+   ;;
  esac
 done
 
@@ -352,6 +372,8 @@ elif [[ $PLOT_PEAK_CAN = 1 ]]; then
     plot_peak_can $LB_FILE
 elif [[ $PLOT_CAN = 1 ]]; then
     plot_can $LB_FILE
+elif [[ $RUN_SIM = 1 ]]; then
+    run_sim
 else
     usage
 fi
