@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# hm (handyman) is a productivity bash tool for quick shortcuts to common bash, git and other CLI tools to increase productivity
+# hm (handyman) is a productivity bash tool for quick shortcuts to common git and avsoftware tools to increase productivity"
 
 usage ()
 {
@@ -11,37 +11,37 @@ usage ()
     echo "  hm merge_branch <SRC_BRANCH> <DST_BRANCH> : merge source branch to destination branch"
 	  echo "  hm update_bigquery: update bigquery schema when the proto file has changed"
     echo "  hm get_topic <FILES> <TOPIC>: extract a topic from a lyftbag"
-    echo "  hm plot_interval <FILES> <TOPIC>: plot a topic from a lyftbag from pub to pub interval"
-    echo "  hm plot_service_timing <FILES> <STAT>: plot a stat for the fusion vehicle service"
     echo "  hm open <FILE>: find a file recursively in a given directory and open it for editing"
     echo "  hm revert_file <FILE> <REMOTE_BRANCH>: revert a file from a PR to its state in remote branch"
     echo "  hm build <TARGET>: build a target corresponding to a bazel target"
-    echo "  hm start <TARGET>: start a local scm session"
     echo "  hm copy_lb: copy latest lyftbag from local logs"
     echo "  hm download <START_TIME> <END_TIME> <CAR_ID> <TOPICS>: download lyftbag"
     echo "  hm release_notes"
+    echo "  hm plot_interval <FILES> <TOPIC>: plot a topic from a lyftbag from pub to pub interval"
+    echo "  hm plot_service_timing <FILES> <STAT>: plot a stat for the fusion vehicle service"
     echo "  hm plot_peak_can <LYFTBAG>"
     echo "  hm plot_can <LYFTBAG>"
+    echo "  hm plot_topic <LYFTBAG> <TOPIC>"
     echo "  hm run_sim"
+    echo "  hm run_avsr <TOPIC>"
+    echo "  hm run_scmcontrol"
 }
 
-plot_topic()
+plot_topic ()
 {
-    local LB_PATH = $1
-    local TOPIC = $2
+    local LB_PATH=$1
+    local TOPIC=$2
     cd $TOP
     bazel run //scripts:plot -- -i $LB_PATH  -f $TOPIC
 }
 
 plot_peak_can ()
 {
-    # python3 $TOP/experimental/vaseeja/peak_can_interval.py $1 --topics /peak_can_channel_2/receive_data,/peak_can_channel_2/send_data --can_ids 97,98,99,100,101,102,105
     python3 $TOP/experimental/vaseeja/peak_can_interval.py $1 --topics /peak_can_channel_2/receive_data,/peak_can_channel_2/send_data --can_ids 97,98,99,100,101
 }
 
 plot_can ()
 {
-    # python3 $TOP/experimental/brianlee/plotting/can_interval.py $1 --topics /can_peripheral_to_host_2 --can_ids 97,99,101,105
     python3 $TOP/experimental/brianlee/plotting/can_interval.py $1 --topics /can_host_to_peripheral_2,/can_peripheral_to_host_2 --can_ids 96,98,100
 }
 
@@ -59,13 +59,6 @@ download_data ()
   fi
   $cmd
   mv /tmp/lyftbags/* $CUR_DIR
-}
-
-start_target ()
-{
-  cd $TOP
-  ./scm.sh --stop
-  ./scm.sh -activity pacifica_keyboard_controller -instance localhost
 }
 
 copy_latest_lyftbag ()
@@ -189,35 +182,52 @@ run_sim ()
     ./avctl run //config/activities:autonomy_sim --instance=aut_sim_host
 }
 
-JIRA_KEY=""
-LB_FILE=""
-TOPIC=""
-STAT=""
-SRC_BRANCH=""
-DST_BRANCH=""
-TARGET_FILE=""
-TARGET=""
-SERVICE=""
+run_avsr ()
+{
+    cd $TOP
+    local TOPIC=$1
+    local AVSR_PATH="src/avs/tools/avsr"
+    echo "avsr t e $TOPIC"
+    [[ -f "$BIN_DIR/$AVSR_PATH/avsr" ]] && "$BIN_DIR/$AVSR_PATH/avsr" t e $TOPIC || ./avctl run --no-provision "$AVSR_PATH:avsr" t e $TOPIC
+}
+
+run_scmcontrol ()
+{
+    cd $TOP
+    ./avctl run //config/activities:autonomy_sim --instance=aut_sim_host
+}
+
 BUILD_AVCTL=0
 COPY_LB=0
 CREATE_BRANCH=0
 DELETE_BRANCH=0
+DOWNLOAD_DATA=0
+DST_BRANCH=""
 EXTRACT_TOPIC=0
+JIRA_KEY=""
+LB_FILE=""
 MERGE_BRANCH=0
 OPEN_FILE=0
+PLOT_CAN=0
+PLOT_PEAK_CAN=0
 PLOT_SERVICE_TIMING=0
+PLOT_TOPIC=0
 PLOT_TOPIC_INTERVAL=0
 PUSH_TO_REMOTE=0
 RELEASE_NOTES=0
 REVERT_FILE=0
-START_TARGET=0
-UPDATE_BIGQUERY=0
-DOWNLOAD_DATA=0
-PLOT_PEAK_CAN=0
-PLOT_CAN=0
 RUN_SIM=0
+RUN_AVSR=0
+SERVICE=""
+SRC_BRANCH=""
+STAT=""
+TARGET=""
+TARGET_FILE=""
+TOPIC=""
+UPDATE_BIGQUERY=0
 
 export TOP=/home/lyft/src/avsoftware
+export BIN_DIR=$TOP/bazel-bin
 
 for i in $@
 do
@@ -300,12 +310,6 @@ case $i in
    shift
    shift
    ;;
-   start)
-   START_TARGET=1
-   TARGET=$2
-   shift
-   shift
-   ;;
    copy_lb)
    COPY_LB=1
    shift
@@ -331,9 +335,22 @@ case $i in
    LB_FILE=$2
    shift
    ;;
+   plot_topic)
+   PLOT_TOPIC=1
+   LB_FILE=$2
+   TOPIC=$3
+   shift
+   shift
+   ;;
    run_sim)
    RUN_SIM=1
    shift
+   ;;
+   run_avsr)
+   RUN_AVSR=1
+   TOPIC=$2
+   shift;
+   shift;
    ;;
  esac
 done
@@ -362,8 +379,6 @@ elif [[ $RELEASE_NOTES = 1 ]]; then
     release_notes
 elif [[ $REVERT_FILE = 1 ]]; then
     revert_file $TARGET_FILE $DST_BRANCH
-elif [[ $START_TARGET = 1 ]]; then
-    start_target $TARGET
 elif [[ $COPY_LB = 1 ]]; then
     copy_latest_lyftbag
 elif [[ $DOWNLOAD_DATA = 1 ]]; then
@@ -372,8 +387,12 @@ elif [[ $PLOT_PEAK_CAN = 1 ]]; then
     plot_peak_can $LB_FILE
 elif [[ $PLOT_CAN = 1 ]]; then
     plot_can $LB_FILE
+elif [[ $PLOT_TOPIC = 1 ]]; then
+    plot_topic $LB_FILE $TOPIC
 elif [[ $RUN_SIM = 1 ]]; then
     run_sim
+elif [[ $RUN_AVSR = 1 ]]; then
+    run_avsr $TOPIC
 else
     usage
 fi
