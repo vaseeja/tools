@@ -24,7 +24,15 @@ usage ()
     echo "  hm plot_topic <LYFTBAG> <TOPIC>"
     echo "  hm run_sim"
     echo "  hm run_avsr <TOPIC>"
+    echo "  hm run_activity <ACTIVITY>"
     echo "  hm run_scmcontrol"
+    echo "  hm print_multicast"
+}
+
+print_multicast_topics ()
+{
+  cd $TOP
+  ./avctl run src/common/multicast_topics:multicast_ip_gen_bin --no-provision
 }
 
 plot_topic ()
@@ -32,7 +40,7 @@ plot_topic ()
     local LB_PATH=$1
     local TOPIC=$2
     cd $TOP
-    bazel run //scripts:plot -- -i $LB_PATH  -f $TOPIC
+    ./avctl run --no-provision //scripts:plot -- -- -i $LB_PATH  -f $TOPIC
 }
 
 plot_peak_can ()
@@ -179,7 +187,7 @@ plot_service_timing ()
 run_sim ()
 {
     cd $TOP
-    ./avctl run //config/activities:autonomy_sim --instance=aut_sim_host
+    ./avctl run --no-provision //config/activities:nmc_autonomy_sim --instance=aut_sim_host
 }
 
 run_avsr ()
@@ -188,7 +196,7 @@ run_avsr ()
     local TOPIC=$1
     local AVSR_PATH="src/avs/tools/avsr"
     echo "avsr t e $TOPIC"
-    [[ -f "$BIN_DIR/$AVSR_PATH/avsr" ]] && "$BIN_DIR/$AVSR_PATH/avsr" t e $TOPIC || ./avctl run --no-provision "$AVSR_PATH:avsr" t e $TOPIC
+    [[ -f "$BIN_DIR/$AVSR_PATH/avsr" ]] && "$BIN_DIR/$AVSR_PATH/avsr" t e $TOPIC --stderrthreshold=0 || ./avctl run --no-provision "$AVSR_PATH:avsr" t e $TOPIC
 }
 
 run_scmcontrol ()
@@ -218,6 +226,7 @@ RELEASE_NOTES=0
 REVERT_FILE=0
 RUN_SIM=0
 RUN_AVSR=0
+PRINT_MULTICAST=0
 SERVICE=""
 SRC_BRANCH=""
 STAT=""
@@ -352,6 +361,10 @@ case $i in
    shift;
    shift;
    ;;
+   print_multicast)
+   PRINT_MULTICAST=1
+   shift;
+   ;;
  esac
 done
 
@@ -393,6 +406,8 @@ elif [[ $RUN_SIM = 1 ]]; then
     run_sim
 elif [[ $RUN_AVSR = 1 ]]; then
     run_avsr $TOPIC
+elif [[ $PRINT_MULTICAST = 1 ]]; then
+    print_multicast_topics
 else
     usage
 fi
