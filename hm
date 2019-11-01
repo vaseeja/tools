@@ -78,9 +78,14 @@ copy_latest_lyftbag ()
 
 build_target ()
 {
-  declare -A build_map
   cd $TOP
-  #TODO map fusion and pacifica build names and invoke avctl with target path
+  ./avctl build --no-provision $BUILD_TARGET
+}
+
+run_activity ()
+{
+  cd $TOP
+  ./avctl run --no-provision config/activities:$BUILD_TARGET
 }
 
 find_and_open_file ()
@@ -226,6 +231,7 @@ RELEASE_NOTES=0
 REVERT_FILE=0
 RUN_SIM=0
 RUN_AVSR=0
+RUN_ACTIVITY=0
 PRINT_MULTICAST=0
 SERVICE=""
 SRC_BRANCH=""
@@ -303,6 +309,12 @@ case $i in
    ;;
    build)
    BUILD_AVCTL=1
+   BUILD_TARGET=$2
+   shift
+   shift
+   ;;
+   run_activity)
+   RUN_ACTIVITY=1
    BUILD_TARGET=$2
    shift
    shift
@@ -406,6 +418,8 @@ elif [[ $RUN_SIM = 1 ]]; then
     run_sim
 elif [[ $RUN_AVSR = 1 ]]; then
     run_avsr $TOPIC
+elif [[ $RUN_ACTIVITY = 1 ]]; then
+    run_activity $BUILD_TARGET
 elif [[ $PRINT_MULTICAST = 1 ]]; then
     print_multicast_topics
 else
