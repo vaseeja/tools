@@ -9,6 +9,7 @@ usage ()
     echo "  hm delete <JIRA Key> : delete a feature branch in git with the name AVSW-<JIRA Key>"
     echo "  hm push : push current git commit branch to remote"
     echo "  hm merge_branch <SRC_BRANCH> <DST_BRANCH> : merge source branch to destination branch"
+    echo "  hm merge_lyftbags <SRC_DIR> <OUT DIR> : merge multiple lyftbags into a single lyftbag"
 	  echo "  hm update_bigquery: update bigquery schema when the proto file has changed"
     echo "  hm get_topic <FILES> <TOPIC>: extract a topic from a lyftbag"
     echo "  hm open <FILE>: find a file recursively in a given directory and open it for editing"
@@ -27,6 +28,17 @@ usage ()
     echo "  hm run_activity <ACTIVITY>"
     echo "  hm run_scmcontrol"
     echo "  hm print_multicast"
+}
+
+merge_lyftbags ()
+{
+  cd $TOP
+  local INDIR=$1
+  local OUTDIR=$2
+  local FILES=$(find $INDIR -name '*.lyftbag')
+  local STR=`echo $FILES | tr ' ' ','`
+  echo $STR
+  $TOP/bazel-bin/src/avs/tools/lyftbag_util/lyftbag_util -task merge --files $STR --out_dir=$OUTDIR
 }
 
 print_multicast_topics ()
@@ -220,6 +232,7 @@ EXTRACT_TOPIC=0
 JIRA_KEY=""
 LB_FILE=""
 MERGE_BRANCH=0
+MERGE_LYFTBAGS=0
 OPEN_FILE=0
 PLOT_CAN=0
 PLOT_PEAK_CAN=0
@@ -235,6 +248,8 @@ RUN_ACTIVITY=0
 PRINT_MULTICAST=0
 SERVICE=""
 SRC_BRANCH=""
+SRC_DIR=""
+OUT_DIR=""
 STAT=""
 TARGET=""
 TARGET_FILE=""
@@ -268,6 +283,14 @@ case $i in
    MERGE_BRANCH=1
    SRC_BRANCH=$2
    DST_BRANCH=$3
+   shift
+   shift
+   shift
+   ;;
+   merge_lb)
+   MERGE_LYFTBAGS=1
+	 SRC_DIR=$2
+   OUT_DIR=$3
    shift
    shift
    shift
@@ -388,6 +411,8 @@ elif [[ $PUSH_TO_REMOTE = 1 ]]; then
     push_branch_to_remote
 elif [[ $MERGE_BRANCH = 1 ]]; then
     merge_branch $SRC_BRANCH $DST_BRANCH
+elif [[ $MERGE_LYFTBAGS = 1 ]]; then
+		merge_lyftbags $SRC_DIR $OUT_DIR
 elif [[ $UPDATE_BIGQUERY = 1 ]]; then
     update_bigquery_schema
 elif [[ $EXTRACT_TOPIC = 1 ]]; then
