@@ -183,7 +183,13 @@ extract_lyftbag_topic ()
 {
   local LFILE=$1
   local TOPIC=$2
-  $TOP/bazel-bin/src/avs/tools/lyftbag_util/lyftbag_util -task extract -extract_format json -files "$LFILE" -topics "$TOPIC" -out_dir "$PWD"
+  local LB_PATH="src/avs/tools/lyftbag_util"
+  WDIR="$PWD"
+  cd $TOP
+  ./avctl build --no-provision "$LB_PATH:lyftbag_util"
+  cd $WDIR
+  echo "extracting $TOPIC"
+  "$BIN_DIR/$LB_PATH/lyftbag_util"  -task extract -extract_format json -files "$LFILE" -topics "$TOPIC" -out_dir "$WDIR"
 }
 
 plot_topic_interval ()
