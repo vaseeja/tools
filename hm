@@ -262,7 +262,13 @@ TARGET_FILE=""
 TOPIC=""
 UPDATE_BIGQUERY=0
 
-export TOP=/home/lyft/src/avsoftware
+if [[ -z "$TOP" ]];  then
+  echo "TOP is not set, please export in shell startup script to avsoftware root"
+  exit 1
+else
+  echo "$TOP"
+fi
+
 export BIN_DIR=$TOP/bazel-bin
 
 for i in $@
