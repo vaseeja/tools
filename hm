@@ -14,6 +14,7 @@ usage ()
     echo "  hm get_topic <FILES> <TOPIC>: extract a topic from a lyftbag"
     echo "  hm open <FILE>: find a file recursively in a given directory and open it for editing"
     echo "  hm revert_file <FILE> <REMOTE_BRANCH>: revert a file from a PR to its state in remote branch"
+    echo "  hm resolve_file <FILE> <OURS/THEIRS>: git checkout --theirs/ours <file>; git add file"
     echo "  hm build <TARGET>: build a target corresponding to a bazel target"
     echo "  hm copy_lb: copy latest lyftbag from local logs"
     echo "  hm download <START_TIME> <END_TIME> <CAR_ID> <TOPICS>: download lyftbag"
@@ -27,7 +28,15 @@ usage ()
     echo "  hm run_avsr <TOPIC>"
     echo "  hm run_activity <ACTIVITY>"
     echo "  hm run_scmcontrol"
+    echo "  hm run_chil"
     echo "  hm print_multicast"
+}
+
+git_resolve_file()
+{
+  git checkout --$1 $2
+  git add $2
+  git status
 }
 
 merge_lyftbags ()
@@ -97,7 +106,7 @@ build_target ()
 run_activity ()
 {
   cd $TOP
-  ./avctl run --no-provision config/activities:$BUILD_TARGET
+  ./avctl run --no-provision config/activities:$BUILD_TARGET --instance host-c105
 }
 
 find_and_open_file ()
@@ -143,7 +152,11 @@ merge_branch ()
   echo "[hm] fetch and pull from origin"
   git fetch origin
   git pull
-  local LBRANCH="$(echo ${DBRANCH} | tr '/' '_')_with_latest_${SBRANCH}_$(date +%Y%m%d)"
+  if [[ ${SBRANCH} = "stable" ]]; then
+      local LBRANCH="$(echo ${DBRANCH} | tr '/' '_')_with_latest_${SBRANCH}_$(date +%Y%m%d)"
+  else
+      local LBRANCH="$(echo ${SBRANCH} | tr '/' '_')_$(date +%Y%m%d)"
+  fi
   echo "[hm] creating branch $LBRANCH"
   git checkout -b $LBRANCH
   echo "[hm] merging $SBRANCH to $LBRANCH"
@@ -210,7 +223,7 @@ plot_service_timing ()
 run_sim ()
 {
     cd $TOP
-    ./avctl run --no-provision //config/activities:nmc_autonomy_sim --instance=aut_sim_host
+    ./avctl run --no-provision //config/activities:autonomy_sim --instance=guv0_sim
 }
 
 run_avsr ()
@@ -228,6 +241,12 @@ run_scmcontrol ()
     ./avctl run //config/activities:autonomy_sim --instance=aut_sim_host
 }
 
+run_integration_chil ()
+{
+   cd $TOP
+   DISPLAY=:0 ./avctl run --run_under="cd ${PWD} &&" //src/sensor/chil_test:chil_sensor_latency_py
+}
+
 BUILD_AVCTL=0
 COPY_LB=0
 CREATE_BRANCH=0
@@ -235,6 +254,7 @@ DELETE_BRANCH=0
 DOWNLOAD_DATA=0
 DST_BRANCH=""
 EXTRACT_TOPIC=0
+GIT_RESOLVE_FILE=0
 JIRA_KEY=""
 LB_FILE=""
 MERGE_BRANCH=0
@@ -251,6 +271,7 @@ REVERT_FILE=0
 RUN_SIM=0
 RUN_AVSR=0
 RUN_ACTIVITY=0
+RUN_CHIL=0
 PRINT_MULTICAST=0
 SERVICE=""
 SRC_BRANCH=""
@@ -283,6 +304,11 @@ case $i in
    delete)
    JIRA_KEY=$2
    DELETE_BRANCH=1
+   shift
+   shift
+   ;;
+   resolve_file)
+
    shift
    shift
    ;;
@@ -364,6 +390,10 @@ case $i in
    DST_BRANCH=$3
    shift
    shift
+   shift
+   ;;
+   run_chil)
+   RUN_CHIL=1
    shift
    ;;
    copy_lb)
@@ -459,6 +489,8 @@ elif [[ $RUN_ACTIVITY = 1 ]]; then
     run_activity $BUILD_TARGET
 elif [[ $PRINT_MULTICAST = 1 ]]; then
     print_multicast_topics
+elif [[ $RUN_CHIL = 1 ]]; then
+    run_integration_chil
 else
     usage
 fi
