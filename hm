@@ -30,6 +30,12 @@ usage ()
     echo "  hm run_scmcontrol"
     echo "  hm run_chil"
     echo "  hm print_multicast"
+    echo "  hm profile"
+}
+
+run_avs_profile()
+{
+  ./avctl run --no-provision //src/avs/tools:avs_profile -- -- --service_filter="${1}" --duration_s="${2}"
 }
 
 git_resolve_file()
@@ -247,6 +253,8 @@ run_integration_chil ()
    DISPLAY=:0 ./avctl run --run_under="cd ${PWD} &&" //src/sensor/chil_test:chil_sensor_latency_py
 }
 
+
+
 BUILD_AVCTL=0
 COPY_LB=0
 CREATE_BRANCH=0
@@ -272,6 +280,7 @@ RUN_SIM=0
 RUN_AVSR=0
 RUN_ACTIVITY=0
 RUN_CHIL=0
+RUN_AVS_PROFILE=0
 PRINT_MULTICAST=0
 SERVICE=""
 SRC_BRANCH=""
@@ -442,6 +451,14 @@ case $i in
    PRINT_MULTICAST=1
    shift;
    ;;
+   profile)
+   RUN_AVS_PROFILE=1
+   SERVICE=$1
+   TIME_RUN=$2
+   shift;
+   shift;
+   shift;
+   ;;
  esac
 done
 
@@ -491,6 +508,8 @@ elif [[ $PRINT_MULTICAST = 1 ]]; then
     print_multicast_topics
 elif [[ $RUN_CHIL = 1 ]]; then
     run_integration_chil
+elif [[ $RUN_AVS_PROFILE = 1 ]]; then
+    run_avs_profile $SERVICE $TIME_RUN
 else
     usage
 fi
