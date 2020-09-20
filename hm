@@ -30,11 +30,13 @@ usage ()
     echo "  hm run_scmcontrol"
     echo "  hm run_chil"
     echo "  hm print_multicast"
-    echo "  hm profile"
+    echo "  hm profile <SERVICE NAME> <DURATION_S>"
 }
 
 run_avs_profile()
 {
+  echo $1
+  echo $2
   ./avctl run --no-provision //src/avs/tools:avs_profile -- -- --service_filter="${1}" --duration_s="${2}"
 }
 
@@ -453,8 +455,8 @@ case $i in
    ;;
    profile)
    RUN_AVS_PROFILE=1
-   SERVICE=$1
-   TIME_RUN=$2
+   SERVICE=$2
+   TIME_RUN=$3
    shift;
    shift;
    shift;
