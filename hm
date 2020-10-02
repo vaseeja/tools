@@ -31,6 +31,14 @@ usage ()
     echo "  hm run_chil"
     echo "  hm print_multicast"
     echo "  hm profile <SERVICE NAME> <DURATION_S>"
+    echo "  hm timeline <LYFTBAG> <SERVICE_NAME>"
+}
+
+run_avsr_timeline()
+{
+  echo $1
+  echo $2
+  ./avsr bag timeline "${1}" "${2}" --sched_latency -j "/tmp/${2}.json"
 }
 
 run_avs_profile()
@@ -231,7 +239,7 @@ plot_service_timing ()
 run_sim ()
 {
     cd $TOP
-    ./avctl run --no-provision //config/activities:autonomy_sim --instance=guv0_sim
+    DISPLAY=:0 ./avctl run --no-provision //config/activities:autonomy_sim --instance=guv0_sim
 }
 
 run_avsr ()
@@ -252,7 +260,7 @@ run_scmcontrol ()
 run_integration_chil ()
 {
    cd $TOP
-   DISPLAY=:0 ./avctl run --run_under="cd ${PWD} &&" //src/sensor/chil_test:chil_sensor_latency_py
+   DISPLAY=:0 ./avctl run --no-provision --run_under="cd ${PWD} &&" //src/sensor/chil_test:chil_sensor_latency_py
 }
 
 
@@ -283,6 +291,7 @@ RUN_AVSR=0
 RUN_ACTIVITY=0
 RUN_CHIL=0
 RUN_AVS_PROFILE=0
+RUN_AVSR_TIMELINE=0
 PRINT_MULTICAST=0
 SERVICE=""
 SRC_BRANCH=""
@@ -461,6 +470,14 @@ case $i in
    shift;
    shift;
    ;;
+   timeline)
+   RUN_AVSR_TIMELINE=1
+   LB_FILE=$2
+   SERVICE=$3
+   shift;
+   shift;
+   shift;
+   ;;
  esac
 done
 
@@ -512,6 +529,8 @@ elif [[ $RUN_CHIL = 1 ]]; then
     run_integration_chil
 elif [[ $RUN_AVS_PROFILE = 1 ]]; then
     run_avs_profile $SERVICE $TIME_RUN
+elif [[ $RUN_AVSR_TIMELINE = 1 ]]; then
+    run_avsr_timeline $LB_FILE $SERVICE
 else
     usage
 fi
